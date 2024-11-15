@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mp3 Music Player</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #6e7f93;
+            color: rgb(8, 60, 123);
+            font-family: cursive;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .music-player {
+            background-color: #7e1fd2;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            width: 300px;
+        }
+
+        .song-info {
+            margin-bottom: 20px;
+        }
+
+        h2,
+        h4 {
+            margin: 5px 0;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .controls {
+            margin: 20px 0;
+        }
+
+        .control-btn {
+            background-color: #478a79;
+            border: none;
+            color: white;
+            font-size: 24px;
+            padding: 10px 20px;
+            margin: 0 5px;
+            cursor: pointer;
+            border-radius: 50px;
+            transition: background-color 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background-color: #0c7445;
+        }
+
+        .progress-container {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        #progress-bar {
+            width: 100%;
+        }
+
+        .time-container {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="music-player">
+        <div class="song-info">
+            <h2 id="song-title">Song Title</h2>
+            <h4 id="artist-name">Artist Name</h4>
+        </div>
+        <!-- Audio Element -->
+        <audio id="audio-player"></audio>
+        <!-- Player Controls -->
+        <div class="controls">
+            <button class="control-btn" id="prev-btn">⏮</button>
+            <button class="control-btn" id="play-btn">⏵</button>
+            <button class="control-btn" id="pause-btn" style="display:none;">⏸</button>
+            <button class="control-btn" id="next-btn">⏭</button>
+        </div>
+        <!-- Progress Bar -->
+        <div class="progress-container">
+            <input type="range" id="progress-bar" value="0" max="100" />
+        </div>
+        <!-- Current Time / Duration -->
+        <div class="time-container">
+            <span id="current-time">00:00</span> / <span id="duration-time">00:00</span>
+        </div>
+    </div>
+
+    <script>
+        // Songs Array 
+        const songs = [
+            { title: "Kahani Suno", artist: "Kaifi Khalil", src: "./music/Kahani Suno.mp3" },
+            { title: "How Far I'll Go", artist: "Alessia Cara", src: "./music/How Far I'll Go.mp3" },
+            { title: "Iraaday", artist: "Abdul Hannan & Rovalio", src: "./music/Iraaday.mp3" },
+            { title: "Nadaaniyan", artist: "Akshath", src: "./music/Nadaaniyan.mp3" },
+            { title: "Dynamite", artist: "BTS", src: "./music/Dynamite.mp3" },
+            { title: "Aangan", artist: "OST", src: "./music/Aangan.mp3" },
+            { title: "Faasle", artist: "Kaavish & Quratulain Balouch", src: "./music/Faasle.mp3" },
+        ];
+        // Initialize Variables
+        let currentSongIndex = 0;
+        const audioPlayer = document.getElementById('audio-player');
+        const songTitle = document.getElementById('song-title');
+        const artistName = document.getElementById('artist-name');
+        const playBtn = document.getElementById('play-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const progressBar = document.getElementById('progress-bar');
+        const currentTimeElem = document.getElementById('current-time');
+        const durationTimeElem = document.getElementById('duration-time');
+
+        // Load Initial Song
+        function loadSong(song) {
+            songTitle.textContent = song.title;
+            artistName.textContent = song.artist;
+            audioPlayer.src = song.src;
+        }
+
+        // Play the loaded song
+        function playSong() {
+            audioPlayer.play();
+            playBtn.style.display = 'none';
+            pauseBtn.style.display = 'inline';
+        }
+
+        // Pause the playing song
+        function pauseSong() {
+            audioPlayer.pause();
+            playBtn.style.display = 'inline';
+            pauseBtn.style.display = 'none';
+        }
+
+        // Go to the next song
+        function nextSong() {
+            currentSongIndex = (currentSongIndex + 1) % songs.length;
+            loadSong(songs[currentSongIndex]);
+            playSong();
+        }
+
+        // Go to the previous song
+        function prevSong() {
+            currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
+            loadSong(songs[currentSongIndex]);
+            playSong();
+        }
+
+        // Update the progress bar
+        function updateProgressBar() {
+            const { duration, currentTime } = audioPlayer;
+            progressBar.value = (currentTime / duration) * 100;
+            updateTimeDisplay(currentTime, duration);
+        }
+
+        // Seek to a new position in the song
+        function setProgress(e) {
+            const width = progressBar.clientWidth;
+            const clickX = e.offsetX;
+            const duration = audioPlayer.duration;
+            audioPlayer.currentTime = (clickX / width) * duration;
+        }
+
+        // Format time 
+        function formatTime(time) {
+            const minutes = Math.floor(time / 60);
+            const seconds = Math.floor(time % 60);
+            return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        }
+
+        // Update time display for current time and duration
+        function updateTimeDisplay(currentTime, duration) {
+            currentTimeElem.textContent = formatTime(currentTime);
+            durationTimeElem.textContent = isNaN(duration) ? '00:00' : formatTime(duration);
+        }
+
+        // Event Listeners with click function
+        playBtn.addEventListener('click', playSong);
+        pauseBtn.addEventListener('click', pauseSong);
+        nextBtn.addEventListener('click', nextSong);
+        prevBtn.addEventListener('click', prevSong);
+        audioPlayer.addEventListener('timeupdate', updateProgressBar);
+        progressBar.addEventListener('input', (e) => setProgress(e));
+
+        // Load the first song on page load
+        loadSong(songs[currentSongIndex]);
+    </script>
+</body>
+
+</html>
